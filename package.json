@@ -6,7 +6,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/valette/cl-rpc.git"
+  },
   "author": "Sebastien Valette",
-  "license": "BSD"
+  "license": "BSD",
+  "gitHead": "006ecc53142c4aca24133ad3d83cd29fbf1f4002"
 }
