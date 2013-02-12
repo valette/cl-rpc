@@ -696,3 +696,4 @@ exports.getDirectoryContent = function (path, callback) {
 		}
 	);
 };
+exports.includeActions(__dirname + '/base.json');
