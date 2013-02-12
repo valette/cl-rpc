@@ -135,21 +135,21 @@ exports.includeActions=function (file, callback) {
 };
 
 includeActionsJSON = function (file, callback) {
-  var actionsObject;
+	var actionsObject;
 	var libraryName = libpath.basename(file, '.json');
 
-  fs.readFile(file, function (err, data) {
-    try {
-      actionsObject = JSON.parse(data); 
-    }
-    catch (error) {
-      console.log('error importing ' + file);
-      actions['import_error_' + libraryName] = {lib : libraryName};
-      if ( typeof(callback) === 'function' ) {
-        callback();
-      }
-      return;
-    }
+	fs.readFile(file, function (err, data) {
+		try {
+			actionsObject = JSON.parse(data); 
+		}
+		catch (error) {
+			console.log('error importing ' + file);
+			actions['import_error_' + libraryName] = {lib : libraryName};
+			if ( typeof(callback) === 'function' ) {
+				callback();
+			}
+			return;
+		}
 		var localActions = actionsObject.actions || [];
 		var path = fs.realpathSync(libpath.dirname(file));
 		var actionsArray = Object.keys(localActions);
@@ -175,14 +175,21 @@ includeActionsJSON = function (file, callback) {
 			actions[actionsArray[i]] = action;
 		}
 
-    var dirs = actionsObject.dataDirs || {};
-		var keys = Object.keys(dirs);
-		for (i = 0; i != keys.length ; i++) {
-			var key = keys[i];
-			dataDirs[key] = dirs[key];
-		}	
+		var dirs = actionsObject.dataDirs || {};
+			var keys = Object.keys(dirs);
+			for (i = 0; i != keys.length ; i++) {
+				var key = keys[i];
+				dataDirs[key] = dirs[key];
+			}	
 
-    var includes = actionsObject.include || [];
+		var includes = actionsObject.include || [];
+		for (i = 0; i != includes.length; i++) {
+			var include = includes[i];
+			if (include.charAt(0) != '/') {
+				// the path is relative. Prepend directory
+				includes[i] = libpath.dirname(file) + '/' + include;
+			}
+		}
 		exports.includeActions(includes, function () {
 			if ( typeof(callback) === 'function' ) {
 				callback();
@@ -696,4 +703,4 @@ exports.getDirectoryContent = function (path, callback) {
 		}
 	);
 };
-exports.includeActions(__dirname + '/base.json');
+exports.addDirectory(__dirname + '/lib/');
