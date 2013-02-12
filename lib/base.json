@@ -182,7 +182,7 @@
 		    ],
 		    "attributes":
 		    {
-		        "js":"lib/write_binary",
+		        "js":"write_binary",
 		        "voidAction" : "true"
 		    }
 		},

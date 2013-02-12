@@ -696,4 +696,4 @@ exports.getDirectoryContent = function (path, callback) {
 		}
 	);
 };
-exports.includeActions(__dirname + '/base.json');
+exports.addDirectory(__dirname + '/lib/');
