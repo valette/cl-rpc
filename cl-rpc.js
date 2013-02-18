@@ -20,6 +20,9 @@ var actionsDirectories = [];
 // object storing all the actions
 var actions;
 
+// permissions level (1 by default)
+var permissions;
+
 // base directory where all data files are (data, cache, actions, ..)
 var filesRoot;
 
@@ -190,6 +193,11 @@ includeActionsJSON = function (file, callback) {
 				includes[i] = libpath.dirname(file) + '/' + include;
 			}
 		}
+
+		if (typeof(actionsObject.permissions) === 'number') {
+			permissions = actionsObject.permissions;
+		}
+
 		exports.includeActions(includes, function () {
 			if ( typeof(callback) === 'function' ) {
 				callback();
@@ -200,7 +208,7 @@ includeActionsJSON = function (file, callback) {
 
 function exportActions(file, callback) {
 	fs.writeFile(file, prettyPrint.json(JSON.stringify({actions : actions ,
-														permissions : 1,
+														permissions : permissions,
 														dataDirs : dataDirs})),
 		function (err) {
 			if (err) throw err;
@@ -218,6 +226,7 @@ exports.update = function (callback) {
 	// clear actions
 	actions = {};
 	dataDirs = {};
+	permissions = 1;
 
 	async.forEach(actionsDirectories, function (directory, callback) {
 		fs.readdir(directory, function (err, files) {
@@ -474,7 +483,9 @@ exports.performAction = function (POST, callback) {
 
 	// then handle output directory in outputDirectory
 	function (callback) {
-
+		if (permissions === 0) {
+			POST.output_directory = "cache/";
+		}
 		outputDirectory = POST.output_directory;
 		actionParameters.output_directory = outputDirectory;
 
