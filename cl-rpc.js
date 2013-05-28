@@ -118,7 +118,7 @@ function includeActionsFile (file, callback) {
 	});
 }
 
-exports.includeActions=function (file, callback) {
+exports.includeActions = function (file, callback) {
 	switch (typeof (file))
 	{
 	case "string" :
@@ -288,7 +288,7 @@ exports.performAction = function (POST, callback) {
 			case "kill" :
 				var handle = ongoingActions[POST.handle];
 				if (!handle) {
-					callback (JSON.stringify({status : 'not found'}));				
+					callback ({status : 'not found'});
 				}
 				var processToKill = handle.childProcess;
 				if (processToKill) {
@@ -297,28 +297,31 @@ exports.performAction = function (POST, callback) {
 					processToKill.killedByMe = true;
 					exec('kill ' + (pid+1) + ' -9', function () {
 						console.log('killed process ' + (pid+1));
-						callback (JSON.stringify({status : 'killed'}));
+						callback ({status : 'killed'});
 					});
 				} else {
-					callback (JSON.stringify({status : 'not existent'}));
+					callback ({status : 'not existent'});
 				}
 				return;
 			case "list" :
 			default:
+				// we need to remove circular dependencies before sending the list
 				var cache = [];
-				callback(JSON.stringify(ongoingActions,
+				var objString = JSON.stringify(ongoingActions,
 					function(key, value) {
 						if (typeof value === 'object' && value !== null) {
 							if (cache.indexOf(value) !== -1) {
 								// Circular reference found, discard key
-								return;
+							return;
 							}
 						// Store value in our collection
-						cache.push(value);
+							cache.push(value);
 						}
-					return value;
-					}));
+						return value;
+						}
+						);
 				cache = null; 
+				callback(JSON.parse(objString));
 				return;
 		}
 	}
@@ -668,7 +671,7 @@ exports.performAction = function (POST, callback) {
 			response.status = "ERROR";
 			response.error = err;
 		}
-		callback(JSON.stringify(response));
+		callback(response);
 	});
 };
 
@@ -707,7 +710,7 @@ exports.getDirectoryContent = function (path, callback) {
 				file.isDirectory = file.isDirectory();
 				file.mtime = file.mtime.getTime();
 			}
-			callback(null, JSON.stringify(files));
+			callback(null, files);
 		}],
 		function (error, message) {
 			callback(message);
