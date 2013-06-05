@@ -48,7 +48,7 @@ function cleanCache() {
 	}
 
 	fs.readdir(cacheDir, function (err, files) {
-		async.forEachSeries(files,
+		async.eachSeries(files,
 			function (file, callback) {
 				fs.stat( cacheDir + file, function (err, stats) {
 					if (err) {
@@ -125,7 +125,7 @@ exports.includeActions = function (file, callback) {
 		includeActionsFile(file, afterImport);
 		break;
 	case "object" :
-		async.forEachSeries(file, includeActionsFile, afterImport);
+		async.eachSeries(file, includeActionsFile, afterImport);
 		break;
 	default:
 		callback ("error in actions importations: cannot handle "+file);
@@ -228,7 +228,7 @@ exports.update = function (callback) {
 	dataDirs = {};
 	permissions = 1;
 
-	async.forEach(actionsDirectories, function (directory, callback) {
+	async.each(actionsDirectories, function (directory, callback) {
 		fs.readdir(directory, function (err, files) {
 			for (var i = 0; i < files.length; i++) {
 				files[i] = directory + files[i];
@@ -475,7 +475,7 @@ exports.performAction = function (POST, callback) {
 
 		var parameters = action.parameters;
 
-		async.forEachSeries(parameters, parseParameter, function(err){
+		async.eachSeries(parameters, parseParameter, function(err){
 			response.MTime = inputMTime;
 			callback (err);
 		});
