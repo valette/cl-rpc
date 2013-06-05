@@ -92,7 +92,7 @@ exports.validatePath = function (path, callback) {
 			for (var i = 0; i != directories.length; i++) {
 				var subDir = directories[i];
 				if (realPath.slice(0, subDir.length) == subDir) {
-					callback (null);
+					callback ();
 					return;
 				}
 			}
@@ -108,12 +108,12 @@ function includeActionsFile (file, callback) {
 				console.log('importing actions from : ' + file);
 				includeActionsJSON(file, callback);
 			} else {
-				callback(null);
+				callback();
 			}
 		}
 		else {
 			console.log("Warning : no file "+file+" found");
-			callback(null);
+			callback();
 		}
 	});
 }
@@ -285,44 +285,41 @@ exports.performAction = function (POST, callback) {
 	if (POST.manage) {
 		switch (POST.manage)
 		{
-			case "kill" :
-				var handle = ongoingActions[POST.handle];
-				if (!handle) {
-					callback ({status : 'not found'});
-				}
-				var processToKill = handle.childProcess;
-				if (processToKill) {
-					var pid = processToKill.pid;
-			//		processToKill.kill('SIGTERM');
-					processToKill.killedByMe = true;
-					exec('kill ' + (pid+1) + ' -9', function () {
-						console.log('killed process ' + (pid+1));
-						callback ({status : 'killed'});
-					});
-				} else {
-					callback ({status : 'not existent'});
-				}
-				return;
-			case "list" :
-			default:
-				// we need to remove circular dependencies before sending the list
-				var cache = [];
-				var objString = JSON.stringify(ongoingActions,
-					function(key, value) {
-						if (typeof value === 'object' && value !== null) {
-							if (cache.indexOf(value) !== -1) {
-								// Circular reference found, discard key
+		case "kill" :
+			var handle = ongoingActions[POST.handle];
+			if (!handle) {
+				callback ({status : 'not found'});
+			}
+			var processToKill = handle.childProcess;
+			if (processToKill) {
+				var pid = processToKill.pid;
+				processToKill.kill();
+				console.log('killed process ' + (pid+1));
+				callback ({status : 'killed'});
+			} else {
+				callback ({status : 'not existent'});
+			}
+			return;
+		case "list" :
+		default:
+			// we need to remove circular dependencies before sending the list
+			var cache = [];
+			var objString = JSON.stringify(ongoingActions,
+				function(key, value) {
+					if (typeof value === 'object' && value !== null) {
+						if (cache.indexOf(value) !== -1) {
+							// Circular reference found, discard key
 							return;
-							}
+						}
 						// Store value in our collection
-							cache.push(value);
-						}
-						return value;
-						}
-						);
-				cache = null; 
-				callback(JSON.parse(objString));
-				return;
+						cache.push(value);
+					}
+					return value;
+				}
+			);
+			cache = null; 
+			callback(JSON.parse(objString));
+			return;
 		}
 	}
 
@@ -378,7 +375,7 @@ exports.performAction = function (POST, callback) {
 			if (parameter.text !== undefined) {
 				// parameter is actually a text anchor
 				commandLine += parameter.text;
-				callback (null);
+				callback ();
 				return;
 			} else {
 				var parameterValue = POST[parameter.name];
@@ -390,7 +387,7 @@ exports.performAction = function (POST, callback) {
 						callback ("parameter " + parameter.name + " is required!");
 						return;
 					} else {
-						callback(null);
+						callback();
 						return;
 					}
 				} else {
@@ -412,7 +409,7 @@ exports.performAction = function (POST, callback) {
 								if (time > inputMTime) {
 									inputMTime = time;
 								}
-								callback (null);
+								callback ();
 							});
 						});
 						break;
@@ -431,7 +428,7 @@ exports.performAction = function (POST, callback) {
 								if (!stats.isDirectory()) {
 									callback ("error : " + parameterValue + " is not a directory");
 								}
-								callback (null);
+								callback ();
 							});
 						});
 						break;
@@ -467,7 +464,7 @@ exports.performAction = function (POST, callback) {
 					case 'text':
 					case 'base64data':
 						commandLine += parameterValue + " ";
-						callback (null);
+						callback ();
 						break;
 					default:
 						callback ("parameter type not handled : " + parameter.type);
@@ -493,7 +490,7 @@ exports.performAction = function (POST, callback) {
 		actionParameters.output_directory = outputDirectory;
 
 		if (action.attributes.voidAction === "true") {
-			callback(null);
+			callback();
 			return;
 		}
 
@@ -515,10 +512,10 @@ exports.performAction = function (POST, callback) {
 						fs.writeFile(counterFile, JSON.stringify({value : index}), 
 							function(err) {
 								if (err) {
-									callback( err );
+									callback(err);
 								}
 								else {
-									callback( null );
+									callback();
 								}
 							}
 						);
@@ -538,13 +535,13 @@ exports.performAction = function (POST, callback) {
 							callback(err.message);
 						}
 						else {
-							callback (null);
+							callback ();
 						}
 					});
 					return;
 				}
 				else {
-					callback (null);
+					callback ();
 				}
 			});
 			break;
@@ -563,22 +560,22 @@ exports.performAction = function (POST, callback) {
 		if ((action.attributes.voidAction === "true")||
         (POST.force_update === "true") ||
         (action.attributes.noCache === "true")){
-			callback(null);
+			callback();
 		}
 		else {
 			// check if action was already performed
 			var actionFile = filesRoot + outputDirectory + "/action.json";
 			fs.stat(actionFile, function (err, stats) {
 				if ((err)||(stats.mtime.getTime() < inputMTime)) {
-					callback(null);
+					callback();
 				} else {
 					fs.readFile(actionFile, function (err, data) {
 						if (data == JSON.stringify(actionParameters)) {
 							console.log(header + "cached");
 							cachedAction = true;
-							callback(null);
+							callback();
 						} else {
-							callback(null);
+							callback();
 						}
 					});
 				}
@@ -596,7 +593,7 @@ exports.performAction = function (POST, callback) {
 			fs.readFile(filesRoot + outputDirectory + '/action.log', function (err, string) {
 				response.status = 'CACHED';
 				response.log = string;
-				callback(null);
+				callback();
 			});
 			return;
 		}
@@ -626,42 +623,45 @@ exports.performAction = function (POST, callback) {
 
 		var handle = {};
 		handle.POST = JSON.parse(JSON.stringify(POST));
-		handle.childProcess = exec(commandLine + " | tee action.log", commandOptions, afterExecution);
+		handle.childProcess = exec(commandLine, commandOptions, afterExecution);
 		ongoingActions[actionHandle] = handle;
 		response.handle = actionHandle;
 
+		var logStream = fs.createWriteStream(filesRoot + outputDirectory + "action.log");
+		handle.childProcess.stdout.pipe(logStream);
+		handle.childProcess.stderr.pipe(logStream);
+
 		function afterExecution(err, stdout, stderr) {
+			if (logStream) {
+				logStream.end();
+			}
+		//	console.log(err);
 			delete ongoingActions[actionHandle];
 			if (POST.stdout == "true") {
 				response.stdout = stdout;
 			} else {
-				response.stdout = 'stdout not included. Launch action with parameter stdout="true"';
+				response.stdout = 'stdout and stderr not included. Launch action with parameter stdout="true"';
 			}
 			response.stderr = stderr;
-			if (err) {
-				response.error = err.message;
-				response.status = "ERROR";
-				callback(null);
-			}
-			else if (stderr){
-				if (handle.childProcess.killedByMe) {
+			if (err || stderr) {
+				if (err.killed) {
 					response.status = "KILLED";
-					callback(null);
-					return;
+				} else {
+					response.status = "ERROR";
+					response.error = err;
 				}
-				response.error = stderr;
-				response.status = "ERROR";
-				callback(null);      
+				callback();
+				return;
 			} else {
 				response.status = 'OK (' + (new Date().getTime() - startTime) / 1000 + 's)';
 				if (writeJSON) {
 					fs.writeFile(filesRoot + outputDirectory + "/action.json", JSON.stringify(actionParameters), function (err) {
 						if (err) {throw err;}
-						callback(null);
+						callback();
 					});
 				}
 				else {
-					callback(null);
+					callback();
 				}
 			}
 		}
