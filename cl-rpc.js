@@ -643,7 +643,7 @@ exports.performAction = function (POST, callback) {
 				response.stdout = 'stdout and stderr not included. Launch action with parameter stdout="true"';
 			}
 			response.stderr = stderr;
-			if (err || stderr) {
+			if (err) {
 				if (err.killed) {
 					response.status = "KILLED";
 				} else {
@@ -651,7 +651,10 @@ exports.performAction = function (POST, callback) {
 					response.error = err;
 				}
 				callback();
-				return;
+			} else if (stderr) {
+				response.status = "ERROR";
+				response.error = err;
+				callback();
 			} else {
 				response.status = 'OK (' + (new Date().getTime() - startTime) / 1000 + 's)';
 				if (writeJSON) {
