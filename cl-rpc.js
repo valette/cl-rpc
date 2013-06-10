@@ -590,10 +590,11 @@ exports.performAction = function (POST, callback) {
 		}
 
 		if (cachedAction) {
-			fs.readFile(filesRoot + outputDirectory + '/action.log', function (err, string) {
-				response.status = 'CACHED';
-				response.log = string;
-				callback();
+			fs.readFile(libpath.join(filesRoot, outputDirectory, 'action.log'),
+				function (err, string) {
+					response.status = 'CACHED';
+					response.log = string;
+					callback();
 			});
 			return;
 		}
@@ -627,7 +628,7 @@ exports.performAction = function (POST, callback) {
 		ongoingActions[actionHandle] = handle;
 		response.handle = actionHandle;
 
-		var logStream = fs.createWriteStream(filesRoot + outputDirectory + "action.log");
+		var logStream = fs.createWriteStream(libpath.join(filesRoot, outputDirectory, "action.log"));
 		handle.childProcess.stdout.pipe(logStream);
 		handle.childProcess.stderr.pipe(logStream);
 
